@@ -68,10 +68,8 @@ class MultiVectorStoreToDocument_DocumentLoaders implements INode {
         const output = nodeData.outputs?.output as string
 
         const topK = (vectorStore as any)?.k ?? 4
-        console.log("query received input", input)
         const q = query?.trim() ? query : input
-        console.log("query received input q", q)
-        let  docs = await vectorStore.similarityMultiSearchWithScore(q, topK)
+        let  docs = await (vectorStore as any).similarityMultiSearchWithScore(q, topK)
         // eslint-disable-next-line no-console
         console.log('\x1b[94m\x1b[1m\n*****VectorStore Documents*****\n\x1b[0m\x1b[0m')
         // eslint-disable-next-line no-console

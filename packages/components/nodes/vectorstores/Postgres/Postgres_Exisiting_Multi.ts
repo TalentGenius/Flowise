@@ -136,9 +136,10 @@ class Postgres_Multi_Existing_VectorStores implements INode {
             postgresConnectionOptions: postgresConnectionOptions as DataSourceOptions
         }
 
-        const vectorStore = await TypeORMVectorStore.fromDataSource(embeddings, args)
+        const vectorStore = await TypeORMVectorStore.fromDataSource(embeddings, args) as any
 
         // query: { [key: string]: number[] } its a dictionary where the key is the field name and the value is the embedding
+        
         vectorStore.similarityMultiSearchWithScore = async (query: any, k: number, filter?: any, _callbacks = undefined) => {
             const startTime = new Date()
             const obj = JSON.parse(query)
@@ -150,12 +151,6 @@ class Postgres_Multi_Existing_VectorStores implements INode {
             keys.forEach((key, index) => {
                 embeddingsByKey[key] = embeddingsArray[index]
             })
-
-            const testText = "Special Projects | Driving Strategic Initiatives for Organizational Success at Blue Trail Software"
-            const a = await vectorStore.embeddings.embedDocuments([testText])
-            const b = await vectorStore.embeddings.embedQuery(testText)
-            console.log("test aaaa", a[0])
-            console.log("test bbbb", b)
 
             console.log("total time taken to get embeddings", (new Date().getTime() - startTime.getTime()) / 1000)
             // replace the templates in the query with the embeddings ie:
