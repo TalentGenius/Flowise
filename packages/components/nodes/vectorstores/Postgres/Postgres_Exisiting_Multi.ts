@@ -173,7 +173,7 @@ class Postgres_Multi_Existing_VectorStores implements INode {
                         embeddingString = `'[${wordEmbedding.join(',')}]'`
                     }
                     else {
-                        embeddingString = `'${directFilters[word.replace('[','').replace( ']','')]}'`
+                        embeddingString = `('${directFilters[word.replace('[','').replace( ']','')].replace(/\s*,\s*/g, "','")}')`
                     } 
                     str = str.replace(new RegExp( word.replace('[','\\[').replace( ']','\\]'), 'g'), embeddingString)
                 })
