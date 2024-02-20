@@ -91,6 +91,7 @@ class Postgres_Multi_Existing_VectorStores implements INode {
     }
 
     async init(nodeData: INodeData, _: string, options: ICommonObject): Promise<any> {
+        console.log("Entering init function of Postgres_Multi_Existing_VectorStores")
         const credentialData = await getCredentialData(nodeData.credential ?? '', options)
         const user = getCredentialParam('user', credentialData, nodeData)
         const password = getCredentialParam('password', credentialData, nodeData)
@@ -141,12 +142,15 @@ class Postgres_Multi_Existing_VectorStores implements INode {
         // query: { [key: string]: number[] } its a dictionary where the key is the field name and the value is the embedding
         
         vectorStore.similarityMultiSearchWithScore = async (query: any, k: number, filter?: any, _callbacks = undefined) => {
+            console.log("Entering similarityMultiSearchWithScore")
             const startTime = new Date()
             const obj = JSON.parse(query)
-            const keys = Object.keys(obj)
+            const toEmbed = obj['to_embed']
+            const directFilters = obj['direct_filters']
+            const keys = Object.keys(toEmbed)
             
             //get the embeddings for all the keys in the query
-            const embeddingsArray = await vectorStore.embeddings.embedDocuments(keys.map((key) => obj[key]))
+            const embeddingsArray = await vectorStore.embeddings.embedDocuments(keys.map((key) => toEmbed[key]))
             const embeddingsByKey = {} as any
             keys.forEach((key, index) => {
                 embeddingsByKey[key] = embeddingsArray[index]
@@ -161,9 +165,16 @@ class Postgres_Multi_Existing_VectorStores implements INode {
                 words?.forEach((word) => {
                     //find the embedding for this template
                     const wordEmbedding = embeddingsByKey[word.replace('[','').replace( ']','')]
-                    
+                    console.log("wordEmbedding: ", wordEmbedding)
+                    console.log("Type of wordEmbedding: ", typeof wordEmbedding)
                     // replace the template with the string representation of the embedding
-                    const embeddingString = `'[${wordEmbedding.join(',')}]'`
+                    var embeddingString = ''
+                    if (typeof wordEmbedding === 'object') {
+                        embeddingString = `'[${wordEmbedding.join(',')}]'`
+                    }
+                    else {
+                        embeddingString = `'${directFilters[word.replace('[','').replace( ']','')]}'`
+                    } 
                     str = str.replace(new RegExp( word.replace('[','\\[').replace( ']','\\]'), 'g'), embeddingString)
                 })
                 return str
