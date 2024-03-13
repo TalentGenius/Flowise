@@ -146,7 +146,7 @@ class Postgres_Multi_Existing_VectorStores implements INode {
             const keys = Object.keys(obj)
             
             //get the embeddings for all the keys in the query
-            const embeddingsArray = await vectorStore.embeddings.embedDocuments(keys.map((key) => obj[key]))
+            const embeddingsArray = await vectorStore.embeddings.embedDocuments(keys.map((key) => obj[key] || "-"))
             const embeddingsByKey = {} as any
             keys.forEach((key, index) => {
                 embeddingsByKey[key] = embeddingsArray[index]
@@ -161,16 +161,19 @@ class Postgres_Multi_Existing_VectorStores implements INode {
                 words?.forEach((word) => {
                     //find the embedding for this template
                     const wordEmbedding = embeddingsByKey[word.replace('[','').replace( ']','')]
-                    
-                    // replace the template with the string representation of the embedding
-                    const embeddingString = `'[${wordEmbedding.join(',')}]'`
-                    str = str.replace(new RegExp( word.replace('[','\\[').replace( ']','\\]'), 'g'), embeddingString)
+                    if(!wordEmbedding){
+                        console.log("wordEmbedding not found for ", word, "skipping replace for this.")
+                    }
+                    else {
+                        // replace the template with the string representation of the embedding
+                        const embeddingString = `'[${wordEmbedding.join(',')}]'`
+                        str = str.replace(new RegExp( word.replace('[','\\[').replace( ']','\\]'), 'g'), embeddingString)
+                    }
                 })
                 return str
             }
 
             let queryString = replaceTemplatesWithEmbeddings(full_query)
-            console.log('demo queryString: ', queryString.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim())
             const poolOptions = {
                 host: postgresConnectionOptions.host,
                 port: postgresConnectionOptions.port,
